@@ -1,0 +1,189 @@
+﻿@model Game2.Models.TicTacModel
+
+@{
+    bool playersTurn = Model.playersTurn;
+    bool gameOver = Model.gameOver;
+    bool playerWon = Model.playerWon;
+    int gameId = Model.gameId;
+    int[] gameIdArray = gameId.ToString().ToCharArray().Select(x => (int)Char.GetNumericValue(x)).ToArray();
+    int[] winnerArray = Model.winningArray;
+
+
+    ViewData["Title"] = "Tic Tac Toe";
+    char[] charDisplayArray = [' ', 'X', 'O'];
+    string[] squareColorArray = ["none", "player", "computer", "winner"];
+}
+
+
+
+<script>
+    var playersTurn = @((playersTurn ? "true" : "false"));
+    var gameOver = @((gameOver ? "true" : "false"));
+
+
+    if (gameOver) {
+        var winners = [@winnerArray[0], @winnerArray[1], @winnerArray[2] ];
+    }
+
+
+    if(!playersTurn && !gameOver){
+        setTimeout(() => {
+            computerTurn();
+        }, 2000)
+    }
+
+    function computerTurn() {
+        $.ajax({
+            url: '/Home/ComputerTurn',
+            type: 'GET',
+            data: {
+                id: @gameId
+                },
+            success: function (data) {
+                console.log('success');
+                window.location.href = ('/home/privacy/' + data.id);
+            },
+            error: function (error) {
+                console.log('error');
+                console.log(error);
+            }
+        });
+    }
+
+    function updateTurn(inputLocation, inputSymbol){
+        $.ajax({
+            url: '/Home/UpdateGame',
+            type: 'GET',
+            data: {
+                id: @gameId,
+                loc: inputLocation,
+                symbol: inputSymbol
+            },
+            success: function (data) {
+                console.log("success");
+                window.location.href = ('/home/privacy/' + data.id);
+            },
+            error: function (error) {
+                console.log("error")
+                console.log(error);
+            }
+        });
+    }
+
+    if(!gameOver){
+        document.addEventListener("DOMContentLoaded", function () {
+            var buttons = document.getElementsByClassName("square");
+            for (var i = 0; i < buttons.length; i++){
+            
+                const buttonId = buttons[i].id;
+                const buttonContent = buttons[i].innerHTML;
+
+            
+
+                if (buttonContent == ' ' && playersTurn) {
+                    buttons[i].addEventListener("click", function () {
+                        updateTurn(buttonId, 2);
+                    });
+                }
+            }
+        });
+    }
+
+    if(gameOver){
+        document.addEventListener("DOMContentLoaded", function () {
+            for (var i = 0; i < winners.length; i++){
+                var button = document.getElementById(winners[i]);
+
+                button.classList.add("winner");
+            }
+        });
+    }
+
+
+</script>
+
+
+
+<style>
+    .square {
+        height: 100px;
+        width: 100px;
+        background: white;
+        border: 2px solid #212529;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .player {
+        background: #dedede;
+    }
+
+    .computer {
+        background: #a8a8a8;
+    }
+
+    .winner {
+        background: #5ce66e;
+    }
+</style>
+
+
+
+
+<h1>@ViewData["Title"]</h1>
+
+
+<p>Use this page to play tic tac toe.</p>
+
+@{
+    string turnString = (Model.playersTurn) ? "Player's" : "Computer's";
+}
+@if (gameOver)
+{
+    <h3> Game Over </h3>
+} else
+{
+    <h3> @turnString turn </h3>
+}
+
+@if (gameOver)
+{
+    @if (playerWon)
+    {
+        <h3>Player won!</h3>
+    } else
+    {
+        <h3>Player didn't win</h3>
+    }
+}
+
+
+
+
+<div class="bg-dark py-5">
+    <div class="col">
+
+        @for(int i = 0; i < gameIdArray.Length; i += 1)
+        {
+            <div class="row justify-content-center">
+                @{
+                    string classString = "square " + squareColorArray[gameIdArray[i] - 1];
+                }
+                <button class="@classString" id="@i">@charDisplayArray[gameIdArray[i] - 1]</button>
+                
+                @{
+                    i++;
+                    classString = "square " + squareColorArray[gameIdArray[i] - 1];
+                }
+                <button class="@classString" id="@i">@charDisplayArray[gameIdArray[i] - 1]</button>
+                
+                @{
+                    i++;
+                    classString = "square " + squareColorArray[gameIdArray[i] - 1];
+                }
+                <button class="@classString" id="@i">@charDisplayArray[gameIdArray[i] - 1]</button>
+            </div>
+        }
+    </div>
+</div>
